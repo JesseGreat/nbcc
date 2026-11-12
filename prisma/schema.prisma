@@ -1,0 +1,251 @@
+// NBCC Membership Portal — Prisma schema
+// Money is always stored in minor units (kobo / pence) with an explicit currency.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  STAFF
+  MEMBER
+}
+
+enum MemberStatus {
+  PENDING_VERIFICATION
+  PENDING_APPROVAL
+  ACTIVE
+  REJECTED
+  INACTIVE
+  ARCHIVED
+  BLACKLISTED
+}
+
+enum Currency {
+  NGN
+  GBP
+}
+
+enum DocumentType {
+  CAC_CERTIFICATE
+  COMPANY_PROFILE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum PaymentPurpose {
+  NEW
+  RENEWAL
+}
+
+enum AnnouncementAudience {
+  ALL
+  ACTIVE
+  TIER
+}
+
+enum ReminderType {
+  RENEWAL_DUE
+  EXPIRED
+}
+
+/// Application user. `id` is the Supabase auth user id.
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  name      String
+  role      Role     @default(MEMBER)
+  memberId  String?  @unique
+  member    Member?  @relation("MemberUser", fields: [memberId], references: [id], onDelete: SetNull)
+  /// Admin 2FA can be enforced later; flag kept now so the schema does not change.
+  mfaRequired Boolean @default(false)
+  isDisabled  Boolean @default(false)
+  lastLoginAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  approvedMembers Member[]       @relation("ApprovedBy")
+  announcements   Announcement[]
+  auditLogs       AuditLog[]
+
+  @@index([role])
+}
+
+model Tier {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  /// Annual fee in minor units (kobo for NGN).
+  feeMinor    Int
+  currency    Currency @default(NGN)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members       Member[]
+  announcements Announcement[]
+}
+
+model Sector {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  members Member[]
+}
+
+model Member {
+  id               String       @id @default(cuid())
+  companyName      String
+  rcNumber         String
+  sectorId         String
+  sector           Sector       @relation(fields: [sectorId], references: [id])
+  tierId           String
+  tier             Tier         @relation(fields: [tierId], references: [id])
+  status           MemberStatus @default(PENDING_VERIFICATION)
+  membershipNumber String?      @unique
+  website          String?
+  address          String
+  logoPath         String?
+
+  mdName  String
+  mdEmail String
+  mdPhone String
+
+  repName  String
+  repEmail String
+  repPhone String
+
+  reasonForJoining String
+
+  approvedAt      DateTime?
+  approvedById    String?   @db.Uuid
+  approvedBy      User?     @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectionReason String?
+  blacklistReason String?
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user      User?            @relation("MemberUser")
+  documents MemberDocument[]
+  payments  Payment[]
+  reminders ReminderLog[]
+
+  @@index([status])
+  @@index([tierId])
+  @@index([sectorId])
+  @@index([companyName])
+  @@index([expiresAt])
+}
+
+model MemberDocument {
+  id          String       @id @default(cuid())
+  memberId    String
+  member      Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  type        DocumentType
+  storagePath String
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  uploadedAt  DateTime     @default(now())
+
+  @@index([memberId])
+}
+
+model Payment {
+  id                 String         @id @default(cuid())
+  memberId           String
+  member             Member         @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  reference          String         @unique
+  amountMinor        Int
+  currency           Currency       @default(NGN)
+  status             PaymentStatus  @default(PENDING)
+  channel            String?
+  purpose            PaymentPurpose
+  tierName           String
+  periodStart        DateTime?
+  periodEnd          DateTime?
+  paidAt             DateTime?
+  receiptNumber      String?        @unique
+  rawGatewayResponse Json?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([memberId])
+  @@index([status, paidAt])
+}
+
+model Announcement {
+  id          String               @id @default(cuid())
+  title       String
+  body        String
+  audience    AnnouncementAudience @default(ALL)
+  tierId      String?
+  tier        Tier?                @relation(fields: [tierId], references: [id], onDelete: SetNull)
+  createdById String?              @db.Uuid
+  createdBy   User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  recipientCount Int               @default(0)
+  sentAt      DateTime?
+  createdAt   DateTime             @default(now())
+
+  @@index([sentAt])
+}
+
+model ReminderLog {
+  id       String       @id @default(cuid())
+  memberId String
+  member   Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  type     ReminderType
+  /// "manual" (admin button) or "cron" (scheduled job).
+  trigger  String       @default("manual")
+  sentAt   DateTime     @default(now())
+
+  @@index([memberId, sentAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?  @db.Uuid
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+/// Gap-free sequences (membership numbers per year, receipt numbers per year).
+/// Incremented with an atomic upsert inside the same transaction as the write that uses it.
+model Counter {
+  key   String @id
+  value Int    @default(0)
+}
+
+/// Key/value settings editable by SUPER_ADMIN (reminder intervals etc.).
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
