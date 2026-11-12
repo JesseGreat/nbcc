@@ -16,13 +16,14 @@ export type SessionUser = User & {
  */
 export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // Verified locally against the project's signing key (no Auth round trip).
+  // Revocation is covered by the database check below (isDisabled) and short token lifetimes.
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) return null;
 
   const appUser = await db.user.findUnique({
-    where: { id: user.id },
+    where: { id: userId },
     include: { member: { include: { tier: true, sector: true } } },
   });
   if (!appUser || appUser.isDisabled) return null;

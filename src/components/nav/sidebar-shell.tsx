@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SidebarTooltip, sidebarItemClass, sidebarLabelClass } from "./sidebar-tooltip";
 import { SIDEBAR_COOKIE } from "./sidebar-config";
 
 
@@ -17,6 +16,7 @@ export function SidebarShell({
   variant,
   initialCollapsed,
   top,
+  label,
   nav,
   footer,
   children,
@@ -24,6 +24,8 @@ export function SidebarShell({
   variant: "member" | "admin";
   initialCollapsed: boolean;
   top: React.ReactNode;
+  /** Small caption shown beside the collapse toggle (e.g. "Admin"). */
+  label?: React.ReactNode;
   nav: React.ReactNode;
   footer: React.ReactNode;
   children: React.ReactNode;
@@ -57,18 +59,21 @@ export function SidebarShell({
         )}
       >
         {top}
-        {nav}
-        <div className="mt-auto space-y-1 border-t border-sidebar-border pt-3">
+        <div className="mb-4 flex items-center justify-between gap-2 pl-3 group-data-[collapsed=true]/sidebar:justify-center group-data-[collapsed=true]/sidebar:pl-0">
+          <span className="text-xs font-semibold tracking-wider text-brand-gold uppercase group-data-[collapsed=true]/sidebar:hidden">{label}</span>
           <button
             type="button"
             onClick={toggle}
             aria-expanded={!collapsed}
-            className={cn(sidebarItemClass, "w-full")}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-white"
           >
-            {collapsed ? <PanelLeftOpen className="size-4 shrink-0" aria-hidden /> : <PanelLeftClose className="size-4 shrink-0" aria-hidden />}
-            <span className={sidebarLabelClass}>{collapsed ? "Expand sidebar" : "Collapse sidebar"}</span>
-            <SidebarTooltip>Expand sidebar</SidebarTooltip>
+            {collapsed ? <PanelLeftOpen className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
           </button>
+        </div>
+        {nav}
+        <div className="mt-auto space-y-1 border-t border-sidebar-border pt-3">
           {footer}
         </div>
       </aside>

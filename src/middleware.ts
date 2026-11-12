@@ -57,11 +57,13 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // Do not put code between createServerClient and getUser (session refresh relies on it).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const role = (user?.app_metadata?.role as string | undefined) ?? null;
+  // Do not put code between createServerClient and getClaims (session refresh relies on it).
+  // getClaims verifies the JWT signature locally against the project's public signing key
+  // (cached JWKS), so most requests make no network call to Supabase Auth.
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  const user = claims?.sub ? { id: claims.sub } : null;
+  const role = ((claims?.app_metadata as { role?: string } | undefined)?.role as string | undefined) ?? null;
 
   if (rewriteToAdmin) {
     if (!user) return redirectWithCookies(request, response, "/login", pathname);

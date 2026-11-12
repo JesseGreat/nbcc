@@ -9,6 +9,8 @@ const supabaseHost = (() => {
 })();
 
 const nextConfig: NextConfig = {
+  // Overridable so a production build can run beside `next dev` without sharing .next.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   // @react-pdf/renderer ships ESM + native-ish deps; keep it out of the server bundle.
   serverExternalPackages: ["@react-pdf/renderer"],

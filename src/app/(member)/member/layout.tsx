@@ -39,7 +39,7 @@ export default async function MemberLayout({ children }: { children: React.React
       <SidebarShell
         variant="member"
         initialCollapsed={collapsed}
-        top={<BrandLogo href="/member" inverted className="mb-6 px-2 group-data-[collapsed=true]/sidebar:px-0" />}
+        top={<BrandLogo href="/member" inverted className="mb-2 px-2 group-data-[collapsed=true]/sidebar:px-0" />}
         nav={<MemberSidebarNav />}
         footer={
           <>

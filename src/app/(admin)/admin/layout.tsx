@@ -35,14 +35,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <SidebarShell
       variant="admin"
       initialCollapsed={collapsed}
-      top={
-        <>
-          <BrandLogo href="/" inverted className="mb-2 px-2 group-data-[collapsed=true]/sidebar:px-0" />
-          <p className="mb-5 px-3 text-xs font-semibold tracking-wider text-brand-gold uppercase group-data-[collapsed=true]/sidebar:px-0 group-data-[collapsed=true]/sidebar:text-center group-data-[collapsed=true]/sidebar:text-[10px]">
-            Admin
-          </p>
-        </>
-      }
+      top={<BrandLogo href="/" inverted className="mb-2 px-2 group-data-[collapsed=true]/sidebar:px-0" />}
+      label="Admin"
       nav={<AdminSidebarNav role={user.role} />}
       footer={footer}
     >
