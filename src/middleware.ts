@@ -71,7 +71,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname === "/member" || pathname.startsWith("/member/")) {
-    if (!user) return redirectWithCookies(request, response, "/login", pathname);
+    // Keep the query (e.g. Paystack ?reference=) so the user lands back where they were.
+    if (!user) return redirectWithCookies(request, response, "/login", pathname + search);
     if (isAdminRole(role)) {
       // Staff accounts live on the admin subdomain.
       return NextResponse.redirect(new URL("/", adminBaseUrl(request)));
