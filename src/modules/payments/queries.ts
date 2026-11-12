@@ -61,13 +61,16 @@ export async function getDashboardStats(now = new Date()) {
   const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1, -1)); // 1 Jan, Lagos midnight
   const in90 = addDays(now, 90);
 
-  const [total, active, pending, expiring, archivedOrBlacklisted, revenueYear, byMonth, byTier] = await Promise.all([
-    db.member.count({ where: { membershipNumber: { not: null } } }),
-    db.member.count({ where: { status: "ACTIVE" } }),
-    db.member.count({ where: { status: "PENDING_APPROVAL" } }),
-    db.member.count({ where: { status: "ACTIVE", expiresAt: { gte: now, lte: in90 } } }),
-    db.member.count({ where: { status: { in: ["ARCHIVED", "BLACKLISTED"] } } }),
-    db.payment.aggregate({ where: { status: "SUCCESS", currency: "NGN", paidAt: { gte: yearStart } }, _sum: { amountMinor: true } }),
+  // Three queries, not eight: keeps the dashboard inside a small serverless connection pool.
+  const [[k], byMonth, byTier] = await Promise.all([
+    db.$queryRaw<{ total: bigint; active: bigint; pending: bigint; expiring: bigint; archived: bigint; revenue: bigint | null }[]>`
+      SELECT
+        (SELECT count(*) FROM "Member" WHERE "membershipNumber" IS NOT NULL) AS total,
+        (SELECT count(*) FROM "Member" WHERE status = 'ACTIVE') AS active,
+        (SELECT count(*) FROM "Member" WHERE status = 'PENDING_APPROVAL') AS pending,
+        (SELECT count(*) FROM "Member" WHERE status = 'ACTIVE' AND "expiresAt" BETWEEN ${now} AND ${in90}) AS expiring,
+        (SELECT count(*) FROM "Member" WHERE status IN ('ARCHIVED', 'BLACKLISTED')) AS archived,
+        (SELECT SUM("amountMinor")::bigint FROM "Payment" WHERE status = 'SUCCESS' AND currency = 'NGN' AND "paidAt" >= ${yearStart}) AS revenue`,
     db.$queryRaw<{ month: string; total: bigint }[]>`
       SELECT to_char(date_trunc('month', "paidAt" AT TIME ZONE 'Africa/Lagos'), 'YYYY-MM') AS month,
              SUM("amountMinor")::bigint AS total
@@ -96,7 +99,14 @@ export async function getDashboardStats(now = new Date()) {
   }
 
   return {
-    kpis: { total, active, pending, expiring, archivedOrBlacklisted, revenueYearMinor: revenueYear._sum.amountMinor ?? 0 },
+    kpis: {
+      total: Number(k.total),
+      active: Number(k.active),
+      pending: Number(k.pending),
+      expiring: Number(k.expiring),
+      archivedOrBlacklisted: Number(k.archived),
+      revenueYearMinor: Number(k.revenue ?? 0),
+    },
     revenueByMonth: months,
     membersByTier: byTier.map((t) => ({ tier: t.name, members: t._count.members })),
   };
