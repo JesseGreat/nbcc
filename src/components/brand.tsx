@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
  */
 export function BrandLogo({ href = "/", className, inverted }: { href?: string; className?: string; inverted?: boolean }) {
   return (
-    <Link href={href} className={cn("inline-flex min-h-11 items-center gap-2.5", className)} aria-label={`${ORG.portalName} home`}>
+    <Link href={href} className={cn("inline-flex min-h-11 items-center gap-2.5 group-data-[collapsed=true]/sidebar:justify-center", className)} aria-label={`${ORG.portalName} home`}>
       <span className={cn("inline-flex shrink-0 items-center", inverted && "rounded-md bg-white p-1")}>
-        <Image src="/brand/nbcc-emblem.png" alt="" width={251} height={160} priority className="h-8 w-auto" />
+        <Image src="/brand/nbcc-emblem.png" alt="" width={251} height={160} priority className="h-8 w-auto group-data-[collapsed=true]/sidebar:h-6" />
       </span>
-      <span className="flex flex-col leading-tight">
+      <span className="flex flex-col leading-tight group-data-[collapsed=true]/sidebar:hidden">
         <span className={cn("text-sm font-extrabold tracking-wide", inverted ? "text-white" : "text-primary")}>{ORG.shortName}</span>
         <span className={cn("text-[11px] font-medium", inverted ? "text-sidebar-foreground/75" : "text-muted-foreground")}>Member Portal</span>
       </span>
@@ -39,5 +39,5 @@ export function BrandCrest({ className, priority }: { className?: string; priori
 }
 
 export function PoweredBy({ className }: { className?: string }) {
-  return <p className={cn("text-xs text-muted-foreground", className)}>Powered by {ORG.poweredBy}</p>;
+  return <p className={cn("text-xs text-muted-foreground group-data-[collapsed=true]/sidebar:hidden", className)}>Powered by {ORG.poweredBy}</p>;
 }

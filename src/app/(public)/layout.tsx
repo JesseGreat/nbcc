@@ -9,7 +9,7 @@ export default async function PublicLayout({ children }: { children: React.React
   const adminHost = isAdminHost((await headers()).get("host"));
   return (
     <div className="min-h-dvh-screen flex flex-col">
-      <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
+      <header className="sticky top-(--banner-h) z-30 border-b bg-card/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4">
           <BrandLogo />
           {adminHost ? (

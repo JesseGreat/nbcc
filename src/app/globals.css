@@ -7,6 +7,8 @@
  * Primary: navy #0B2545. Accent: warm gold.
  */
 :root {
+  /* Height of the demo banner (set by DemoBanner); sticky bars sit below it. */
+  --banner-h: 0px;
   --brand-navy: #0b2545;
   --brand-navy-600: #13315c;
   --brand-gold: #c9a227;
@@ -104,12 +106,13 @@
   html {
     @apply font-sans;
     -webkit-text-size-adjust: 100%;
-    overflow-x: hidden;
+    /* clip (not hidden): hidden turns body into a scroll container and breaks position: sticky */
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground antialiased;
     min-height: 100dvh;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

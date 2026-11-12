@@ -1,4 +1,7 @@
+import { cookies } from "next/headers";
 import { BrandLogo, PoweredBy } from "@/components/brand";
+import { SidebarShell } from "@/components/nav/sidebar-shell";
+import { SIDEBAR_COOKIE } from "@/components/nav/sidebar-config";
 import { SignOutButton } from "@/components/nav/sign-out-button";
 import { requireMember } from "@/lib/rbac";
 import { GATED_STATUSES, MemberStatusScreen } from "@/modules/members/components/status-screen";
@@ -29,23 +32,27 @@ export default async function MemberLayout({ children }: { children: React.React
     );
   }
 
-  return (
-    <div className="min-h-dvh-screen md:grid md:grid-cols-[16rem_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col bg-sidebar p-4 text-sidebar-foreground md:flex">
-        <BrandLogo href="/member" inverted className="mb-6 px-2" />
-        <MemberSidebarNav />
-        <div className="mt-auto space-y-3 border-t border-sidebar-border pt-4">
-          <div className="px-3">
-            <p className="truncate text-sm font-semibold text-white">{user.member.companyName}</p>
-            <p className="truncate text-xs text-sidebar-foreground/70">{user.email}</p>
-          </div>
-          <SignOutButton className="text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-white" />
-          <PoweredBy className="px-3 text-sidebar-foreground/60" />
-        </div>
-      </aside>
+  const collapsed = (await cookies()).get(SIDEBAR_COOKIE.member)?.value === "1";
 
-      <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-card/95 px-4 backdrop-blur md:hidden">
+  return (
+    <>
+      <SidebarShell
+        variant="member"
+        initialCollapsed={collapsed}
+        top={<BrandLogo href="/member" inverted className="mb-6 px-2 group-data-[collapsed=true]/sidebar:px-0" />}
+        nav={<MemberSidebarNav />}
+        footer={
+          <>
+            <div className="px-3 py-1 group-data-[collapsed=true]/sidebar:hidden">
+              <p className="truncate text-sm font-semibold text-white">{user.member.companyName}</p>
+              <p className="truncate text-xs text-sidebar-foreground/70">{user.email}</p>
+            </div>
+            <SignOutButton className="text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-white" />
+            <PoweredBy className="px-3 pt-1 text-sidebar-foreground/60" />
+          </>
+        }
+      >
+        <header className="sticky top-(--banner-h) z-30 flex h-14 items-center justify-between border-b bg-card/95 px-4 backdrop-blur md:hidden">
           <BrandLogo href="/member" />
           <SignOutButton className="w-auto px-2 text-muted-foreground hover:text-foreground" />
         </header>
@@ -53,9 +60,8 @@ export default async function MemberLayout({ children }: { children: React.React
           {children}
         </main>
         <PoweredBy className="pb-24 text-center md:hidden" />
-      </div>
-
+      </SidebarShell>
       <MemberBottomNav />
-    </div>
+    </>
   );
 }

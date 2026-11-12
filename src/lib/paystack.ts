@@ -41,6 +41,17 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return body.data;
 }
 
+/**
+ * Paystack rejects reserved test domains (.test, .example, .invalid, .localhost),
+ * which demo and seed accounts use. Map those to an example.com placeholder
+ * (IANA-reserved, never delivered). Real member emails pass through unchanged.
+ */
+export function paystackEmail(email: string): string {
+  const [local, domain = ""] = email.toLowerCase().split("@");
+  if (!/\.(test|example|invalid|localhost)$/.test(domain)) return email;
+  return `${local.replace(/[^a-z0-9._-]/g, "")}.${domain.split(".")[0]}@example.com`;
+}
+
 export async function initializeTransaction(input: {
   email: string;
   amountMinor: number;
@@ -57,7 +68,7 @@ export async function initializeTransaction(input: {
   const data = await call<{ authorization_url: string; reference: string }>("/transaction/initialize", {
     method: "POST",
     body: JSON.stringify({
-      email: input.email,
+      email: paystackEmail(input.email),
       amount: input.amountMinor,
       currency: input.currency,
       reference: input.reference,

@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { NavLink } from "@/components/nav/nav-link";
+import { SidebarTooltip, sidebarItemClass, sidebarLabelClass } from "@/components/nav/sidebar-tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BrandLogo } from "@/components/brand";
 import type { AppRole } from "@/lib/roles";
@@ -38,11 +39,12 @@ function NavList({ role, onNavigate }: { role: AppRole; onNavigate?: () => void 
           key={href}
           href={href}
           onClick={onNavigate}
-          className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-white"
+          className={sidebarItemClass}
           activeClassName="bg-sidebar-accent text-white"
         >
-          <Icon className="size-4" aria-hidden />
-          {label}
+          <Icon className="size-4 shrink-0" aria-hidden />
+          <span className={sidebarLabelClass}>{label}</span>
+          <SidebarTooltip>{label}</SidebarTooltip>
         </NavLink>
       ))}
     </nav>

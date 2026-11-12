@@ -2,6 +2,7 @@
 
 import { Bell, Building2, CreditCard, LayoutDashboard, UserRound } from "lucide-react";
 import { NavLink } from "@/components/nav/nav-link";
+import { SidebarTooltip, sidebarItemClass, sidebarLabelClass } from "@/components/nav/sidebar-tooltip";
 
 export const MEMBER_NAV = [
   { href: "/member", label: "Home", icon: LayoutDashboard },
@@ -14,17 +15,16 @@ export const MEMBER_NAV = [
 export function MemberSidebarNav() {
   return (
     <nav aria-label="Member" className="flex flex-col gap-1">
-      {MEMBER_NAV.map(({ href, label, icon: Icon }) => (
-        <NavLink
-          key={href}
-          href={href}
-          className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-white"
-          activeClassName="bg-sidebar-accent text-white"
-        >
-          <Icon className="size-4" aria-hidden />
-          {label === "News" ? "Announcements" : label}
-        </NavLink>
-      ))}
+      {MEMBER_NAV.map(({ href, label, icon: Icon }) => {
+        const text = label === "News" ? "Announcements" : label;
+        return (
+          <NavLink key={href} href={href} className={sidebarItemClass} activeClassName="bg-sidebar-accent text-white">
+            <Icon className="size-4 shrink-0" aria-hidden />
+            <span className={sidebarLabelClass}>{text}</span>
+            <SidebarTooltip>{text}</SidebarTooltip>
+          </NavLink>
+        );
+      })}
     </nav>
   );
 }
