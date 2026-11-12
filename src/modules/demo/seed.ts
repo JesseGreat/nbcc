@@ -221,8 +221,9 @@ async function wipe(db: PrismaClient, supabase: SupabaseClient | null, log: Log)
   const demoEmails = new Set(Object.values(DEMO_ACCOUNTS).map((a) => a.email));
 
   if (supabase) {
-    // Remove auth accounts created during the demo (e.g. live registrations).
-    const users = await db.user.findMany({ select: { id: true, email: true } });
+    // Remove member auth accounts created during the demo (e.g. live registrations).
+    // Staff accounts are kept so a reset never locks out the admin who triggered it.
+    const users = await db.user.findMany({ where: { role: "MEMBER" }, select: { id: true, email: true } });
     for (const u of users) {
       if (demoEmails.has(u.email)) continue;
       const { error } = await supabase.auth.admin.deleteUser(u.id);
@@ -238,7 +239,8 @@ async function wipe(db: PrismaClient, supabase: SupabaseClient | null, log: Log)
     db.announcement.deleteMany(),
     db.payment.deleteMany(),
     db.memberDocument.deleteMany(),
-    db.user.deleteMany(),
+    db.user.deleteMany({ where: { role: "MEMBER" } }),
+    db.user.updateMany({ data: { memberId: null } }),
     db.member.deleteMany(),
     db.tier.deleteMany(),
     db.sector.deleteMany(),
@@ -335,6 +337,14 @@ export async function runSeed({ db, supabase, demoPassword, reset, log = console
 
   const sampleCac = samplePdf("CERTIFICATE OF INCORPORATION", "Corporate Affairs Commission - sample");
   const sampleProfile = samplePdf("COMPANY PROFILE", "Sample company profile");
+  if (supabase) {
+    for (const [name, bytes] of [["cac-certificate.pdf", sampleCac], ["company-profile.pdf", sampleProfile]] as const) {
+      const { error } = await supabase.storage
+        .from(UPLOADS.documentsBucket)
+        .upload(`samples/${name}`, bytes, { contentType: "application/pdf", upsert: true });
+      if (error) log(`  ! sample upload failed: ${error.message}`);
+    }
+  }
   let demoMemberId = "";
 
   for (const p of planned) {
@@ -375,13 +385,8 @@ export async function runSeed({ db, supabase, demoPassword, reset, log = console
       ...(rand() > 0.4 ? [{ type: "COMPANY_PROFILE" as const, fileName: "company-profile.pdf", bytes: sampleProfile }] : []),
     ];
     for (const d of docs) {
-      const storagePath = `members/${member.id}/${d.type.toLowerCase()}-${d.fileName}`;
-      if (supabase) {
-        const { error } = await supabase.storage
-          .from(UPLOADS.documentsBucket)
-          .upload(storagePath, d.bytes, { contentType: "application/pdf", upsert: true });
-        if (error) log(`  ! upload failed for ${storagePath}: ${error.message}`);
-      }
+      // Seeded members share two sample files (uploaded once below) to keep resets fast.
+      const storagePath = `samples/${d.fileName}`;
       await db.memberDocument.create({
         data: { memberId: member.id, type: d.type, storagePath, fileName: d.fileName, mimeType: "application/pdf", sizeBytes: d.bytes.byteLength, uploadedAt: p.createdAt },
       });

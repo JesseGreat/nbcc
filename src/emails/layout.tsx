@@ -1,5 +1,6 @@
-import { Body, Button, Container, Head, Hr, Html, Preview, Section, Text } from "react-email";
+import { Body, Button, Container, Head, Hr, Html, Img, Preview, Section, Text } from "react-email";
 import { ORG } from "@/lib/config";
+import { publicEnv } from "@/lib/env";
 
 const colors = {
   navy: "#0B2545",
@@ -19,7 +20,11 @@ export function EmailLayout({ preview, children }: { preview: string; children: 
       <Preview>{preview}</Preview>
       <Body style={{ backgroundColor: colors.bg, margin: 0, padding: "24px 0", fontFamily: "Inter, Segoe UI, Arial, sans-serif" }}>
         <Container style={{ maxWidth: 560, width: "100%", margin: "0 auto", backgroundColor: "#ffffff", borderRadius: 12, overflow: "hidden", border: `1px solid ${colors.border}` }}>
-          <Section style={{ backgroundColor: colors.navy, padding: "20px 24px" }}>
+          <Section style={{ backgroundColor: "#ffffff", padding: "16px 24px 8px", textAlign: "center" }}>
+            {/* Absolute URL: email clients load it from the deployed portal. */}
+            <Img src={`${publicEnv.appUrl}/brand/nbcc-logo.png`} alt={ORG.name} width="120" style={{ margin: "0 auto", height: "auto" }} />
+          </Section>
+          <Section style={{ backgroundColor: colors.navy, padding: "14px 24px" }}>
             <Text style={{ margin: 0, color: "#ffffff", fontSize: 18, fontWeight: 800, letterSpacing: 0.5 }}>
               {ORG.shortName} <span style={{ color: colors.gold, fontWeight: 600 }}>Member Portal</span>
             </Text>

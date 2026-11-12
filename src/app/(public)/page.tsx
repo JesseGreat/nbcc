@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Building2, CreditCard, FileText, Megaphone, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandCrest } from "@/components/brand";
 import { listActiveTiers } from "@/modules/settings/queries";
 import { formatMoney } from "@/lib/money";
 import { ORG } from "@/lib/config";
@@ -22,7 +23,8 @@ export default async function LandingPage() {
   return (
     <>
       <section className="bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-4 py-14 md:py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-[1fr_auto] md:py-24">
+          <div>
           <p className="mb-3 text-sm font-semibold tracking-wider text-brand-gold uppercase">{ORG.name}</p>
           <h1 className="max-w-3xl text-3xl leading-tight font-bold tracking-tight md:text-5xl">
             Your Chamber membership, managed in one place.
@@ -45,6 +47,10 @@ export default async function LandingPage() {
             >
               <Link href="/login">Member login</Link>
             </Button>
+          </div>
+          </div>
+          <div className="hidden rounded-2xl bg-white p-6 shadow-lg md:block">
+            <BrandCrest priority className="w-56 lg:w-64" />
           </div>
         </div>
       </section>

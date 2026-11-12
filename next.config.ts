@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // @react-pdf/renderer ships ESM + native-ish deps; keep it out of the server bundle.
   serverExternalPackages: ["@react-pdf/renderer"],
+  // The PDF receipt reads the crest from disk; make sure Vercel ships it with the functions.
+  outputFileTracingIncludes: { "/**": ["./public/brand/nbcc-emblem-print.png"] },
   images: {
     remotePatterns: supabaseHost
       ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]

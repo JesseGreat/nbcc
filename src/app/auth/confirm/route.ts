@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/modules/auth/schemas";
 import { onEmailVerified } from "@/modules/members/lifecycle";
 
-const ALLOWED_TYPES: EmailOtpType[] = ["email", "signup", "magiclink", "recovery"];
+const ALLOWED_TYPES: EmailOtpType[] = ["email", "signup", "magiclink", "recovery", "invite"];
 
 /**
  * Handles links from our verification / password-reset emails:

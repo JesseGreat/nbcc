@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FormError } from "@/components/form/field";
-import type { ActionResult } from "@/lib/action-result";
+import type { AnyActionResult } from "@/lib/action-result";
 
 type Props = {
   trigger: React.ReactNode;
@@ -27,7 +27,7 @@ type Props = {
   destructive?: boolean;
   reason?: { label: string; required: boolean; placeholder?: string };
   successMessage: string;
-  run: (reason: string) => Promise<{ ok: true } | Extract<ActionResult, { ok: false }>>;
+  run: (reason: string) => Promise<AnyActionResult>;
 };
 
 /** Confirmation dialog for admin actions, with an optional reason field. */

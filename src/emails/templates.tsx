@@ -29,6 +29,18 @@ export function PasswordResetEmail({ name, url }: { name: string; url: string })
   );
 }
 
+export function StaffInviteEmail({ name, roleLabel, url }: { name: string; roleLabel: string; url: string }) {
+  return (
+    <EmailLayout preview="You have been invited to the NBCC admin portal">
+      <H1>You have been invited to the admin portal</H1>
+      <P>Hello {name},</P>
+      <P>You have been given {roleLabel} access to the NBCC Member Portal admin area. Choose a password to get started.</P>
+      <CTA href={url}>Set your password</CTA>
+      <Muted>This link can only be used once.</Muted>
+    </EmailLayout>
+  );
+}
+
 export function ApplicationReceivedEmail({ name, companyName }: { name: string; companyName: string }) {
   return (
     <EmailLayout preview="We have received your membership application">

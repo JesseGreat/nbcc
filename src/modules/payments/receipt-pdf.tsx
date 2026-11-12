@@ -1,5 +1,7 @@
 import "server-only";
-import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { Member, Payment } from "@prisma/client";
 import { ORG } from "@/lib/config";
 import { formatDate } from "@/lib/dates";
@@ -11,7 +13,10 @@ const muted = "#526075";
 
 const s = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: "Helvetica", color: "#0F172A" },
-  header: { backgroundColor: navy, color: "#fff", padding: 18, marginBottom: 24, flexDirection: "row", justifyContent: "space-between" },
+  header: { backgroundColor: navy, color: "#fff", padding: 18, marginBottom: 24, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  brandRow: { flexDirection: "row", alignItems: "center" },
+  emblemTile: { backgroundColor: "#fff", borderRadius: 4, padding: 4, marginRight: 10 },
+  emblem: { height: 40, width: 63 },
   brand: { fontSize: 16, fontFamily: "Helvetica-Bold" },
   brandSub: { fontSize: 9, color: "#C9D3E0", marginTop: 2 },
   title: { fontSize: 18, fontFamily: "Helvetica-Bold", color: gold, textAlign: "right" },
@@ -44,14 +49,22 @@ function Row({ label, value }: { label: string; value: string }) {
 
 const CHANNELS: Record<string, string> = { card: "Card", bank: "Bank", bank_transfer: "Bank transfer", ussd: "USSD", mobile_money: "Mobile money", qr: "QR" };
 
-function Receipt({ payment, member }: { payment: Payment; member: Member }) {
+function Receipt({ payment, member, emblem }: { payment: Payment; member: Member; emblem: Buffer | null }) {
   return (
     <Document title={`Receipt ${payment.receiptNumber}`} author={ORG.name}>
       <Page size="A4" style={s.page}>
         <View style={s.header}>
-          <View>
-            <Text style={s.brand}>{ORG.shortName} Member Portal</Text>
-            <Text style={s.brandSub}>{ORG.name}</Text>
+          <View style={s.brandRow}>
+            {emblem && (
+              <View style={s.emblemTile}>
+                {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
+                <Image src={emblem} style={s.emblem} />
+              </View>
+            )}
+            <View>
+              <Text style={s.brand}>{ORG.shortName} Member Portal</Text>
+              <Text style={s.brandSub}>{ORG.name}</Text>
+            </View>
           </View>
           <Text style={s.title}>RECEIPT</Text>
         </View>
@@ -90,6 +103,13 @@ function Receipt({ payment, member }: { payment: Payment; member: Member }) {
   );
 }
 
-export function renderReceiptPdf(payment: Payment, member: Member): Promise<Buffer> {
-  return renderToBuffer(<Receipt payment={payment} member={member} />);
+let emblemCache: Promise<Buffer | null> | null = null;
+/** The crest for the receipt header; the receipt still renders if the file is unavailable. */
+function loadEmblem() {
+  emblemCache ??= readFile(path.join(process.cwd(), "public/brand/nbcc-emblem-print.png")).catch(() => null);
+  return emblemCache;
+}
+
+export async function renderReceiptPdf(payment: Payment, member: Member): Promise<Buffer> {
+  return renderToBuffer(<Receipt payment={payment} member={member} emblem={await loadEmblem()} />);
 }
