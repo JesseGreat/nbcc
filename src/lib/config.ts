@@ -32,7 +32,8 @@ export const UPLOADS = {
   maxBytes: 5 * 1024 * 1024,
   logoMaxBytes: 2 * 1024 * 1024,
   documentMimeTypes: ["application/pdf", "image/jpeg", "image/png"] as const,
-  logoMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/svg+xml"] as const,
+  // No SVG: it can carry scripts.
+  logoMimeTypes: ["image/jpeg", "image/png", "image/webp"] as const,
   documentsBucket: "member-documents",
   logosBucket: "member-logos",
 };

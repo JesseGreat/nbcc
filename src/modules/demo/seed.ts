@@ -13,6 +13,7 @@ import { nextMembershipNumber, nextReceiptNumber } from "@/lib/counters";
 import { UPLOADS } from "@/lib/config";
 import { ensureStorageBuckets } from "@/lib/storage";
 import { toMinor } from "@/lib/money";
+import { DEMO_ACCOUNTS } from "./accounts";
 
 type Log = (msg: string) => void;
 
@@ -50,11 +51,6 @@ export const SECTORS = [
   "Other",
 ] as const;
 
-export const DEMO_ACCOUNTS = {
-  admin: { email: "admin@demo.nbcc.test", name: "Amaka Obi (Demo Admin)", role: "SUPER_ADMIN" as const },
-  staff: { email: "staff@demo.nbcc.test", name: "Tom Reynolds (Demo Staff)", role: "STAFF" as const },
-  member: { email: "member@demo.nbcc.test", name: "Funmi Coker (Demo Member)", role: "MEMBER" as const },
-};
 
 type Sector = (typeof SECTORS)[number];
 type TierSlug = (typeof TIERS)[number]["slug"];

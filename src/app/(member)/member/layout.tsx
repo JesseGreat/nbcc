@@ -1,12 +1,33 @@
 import { BrandLogo, PoweredBy } from "@/components/brand";
 import { SignOutButton } from "@/components/nav/sign-out-button";
 import { requireMember } from "@/lib/rbac";
+import { GATED_STATUSES, MemberStatusScreen } from "@/modules/members/components/status-screen";
 import { MemberBottomNav, MemberSidebarNav } from "./member-nav";
 
 export const dynamic = "force-dynamic";
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const user = await requireMember();
+
+  // Not yet approved (or rejected / suspended): show a status screen instead of the portal.
+  if (GATED_STATUSES.includes(user.member.status)) {
+    return (
+      <div className="min-h-dvh-screen flex flex-col">
+        <header className="flex h-16 items-center justify-between border-b bg-card px-4">
+          <BrandLogo href="/member" />
+          <SignOutButton className="w-auto px-2 text-muted-foreground hover:text-foreground" />
+        </header>
+        <main id="main" className="flex-1 px-4">
+          <MemberStatusScreen
+            status={user.member.status}
+            companyName={user.member.companyName}
+            rejectionReason={user.member.rejectionReason}
+          />
+        </main>
+        <PoweredBy className="pb-safe py-4 text-center" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh-screen md:grid md:grid-cols-[16rem_1fr]">
