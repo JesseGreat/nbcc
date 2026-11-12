@@ -28,7 +28,7 @@ export function PaymentList({ payments }: { payments: Payment[] }) {
           {p.status === "SUCCESS" && p.receiptNumber && (
             <a
               href={`/api/receipts/${p.id}`}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium text-primary hover:bg-muted md:min-h-9"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium text-primary hover:bg-muted lg:min-h-9"
             >
               <Download className="size-4" aria-hidden /> Receipt
               <span className="sr-only">{p.receiptNumber}</span>

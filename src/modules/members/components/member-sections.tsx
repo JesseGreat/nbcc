@@ -95,7 +95,7 @@ export async function DocumentsList({ documents }: { documents: MemberDocument[]
               href={urls[i]!}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-medium text-primary hover:bg-muted md:min-h-9"
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-medium text-primary hover:bg-muted lg:min-h-9"
             >
               View <ExternalLink className="size-3.5" aria-hidden />
               <span className="sr-only">{DOC_LABELS[d.type]}</span>

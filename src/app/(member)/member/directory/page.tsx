@@ -64,7 +64,7 @@ export default async function DirectoryPage({ searchParams }: { searchParams: Pr
                       href={m.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 inline-flex min-h-11 max-w-full items-center gap-1 text-sm text-primary hover:underline md:min-h-8"
+                      className="mt-1 inline-flex min-h-11 max-w-full items-center gap-1 text-sm text-primary hover:underline lg:min-h-8"
                     >
                       <span className="truncate">{m.website.replace(/^https?:\/\/(www\.)?/, "")}</span>
                       <ExternalLink className="size-3.5 shrink-0" aria-hidden />

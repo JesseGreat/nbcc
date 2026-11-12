@@ -31,7 +31,7 @@ export function DemoBanner() {
               sessionStorage.setItem(STORAGE_KEY, "1");
             } catch {}
           }}
-          className="-my-1 inline-flex size-11 items-center justify-center rounded-md hover:bg-black/10 md:size-8"
+          className="-my-1 inline-flex size-11 items-center justify-center rounded-md hover:bg-black/10 lg:size-8"
           aria-label="Dismiss demo banner"
         >
           <X className="size-4" />

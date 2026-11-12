@@ -26,7 +26,7 @@ export function Pagination({
     return qs ? `${basePath}?${qs}` : basePath;
   };
 
-  const linkClass = "inline-flex min-h-11 items-center gap-1 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted md:min-h-9";
+  const linkClass = "inline-flex min-h-11 items-center gap-1 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted lg:min-h-9";
 
   return (
     <nav aria-label="Pagination" className="mt-4 flex items-center justify-between gap-2">

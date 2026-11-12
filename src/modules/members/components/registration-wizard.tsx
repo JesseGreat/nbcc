@@ -35,7 +35,9 @@ export function RegistrationWizard({ tiers, sectors }: { tiers: TierOption[]; se
 
   const form = useForm<ApplicationInput>({
     resolver: zodResolver(applicationSchema),
-    mode: "onTouched",
+    // Validate on "Continue" only. Validating on blur shifted the layout while the
+    // user was tapping Continue, which swallowed the tap on phones.
+    mode: "onSubmit",
     defaultValues: {
       companyName: "", rcNumber: "", sectorId: "", website: "", address: "",
       mdName: "", mdEmail: "", mdPhone: "",
@@ -45,6 +47,14 @@ export function RegistrationWizard({ tiers, sectors }: { tiers: TierOption[]; se
   });
   const { register, formState: { errors } } = form;
   const err = (name: FieldPath<ApplicationInput>) => errors[name]?.message as string | undefined;
+
+  // Once a field shows an error, re-check it as the user types or picks, so the error clears straight away.
+  useEffect(() => {
+    const sub = form.watch((_values, { name }) => {
+      if (name && form.getFieldState(name).error) void form.trigger(name);
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -313,11 +323,13 @@ export function RegistrationWizard({ tiers, sectors }: { tiers: TierOption[]; se
           <span />
         )}
         {step < STEPS.length - 1 ? (
-          <Button type="button" size="lg" onClick={next}>
+          // Distinct keys: React must not reuse this <button> as the submit button,
+          // or the tap that advances to the last step would also submit the form.
+          <Button key="continue" type="button" size="lg" onClick={next}>
             Continue <ArrowRight aria-hidden />
           </Button>
         ) : (
-          <Button type="submit" size="lg" disabled={pending}>
+          <Button key="submit" type="submit" size="lg" disabled={pending}>
             {pending ? <Loader2 className="animate-spin" aria-hidden /> : <Check aria-hidden />}
             Submit application
           </Button>
