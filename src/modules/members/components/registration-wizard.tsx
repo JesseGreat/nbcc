@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, FileUp, Loader2, MailCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Field, FormError } from "@/components/form/field";
@@ -237,10 +238,10 @@ export function RegistrationWizard({ tiers, sectors }: { tiers: TierOption[]; se
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field id="password" label="Password" hint="At least 10 characters, with letters and numbers." error={err("password")} required>
-                  <Input type="password" autoComplete="new-password" {...register("password")} />
+                  <PasswordInput autoComplete="new-password" {...register("password")} />
                 </Field>
                 <Field id="confirmPassword" label="Confirm password" error={err("confirmPassword")} required>
-                  <Input type="password" autoComplete="new-password" {...register("confirmPassword")} />
+                  <PasswordInput autoComplete="new-password" {...register("confirmPassword")} />
                 </Field>
               </div>
             </>

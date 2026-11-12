@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Field, FormError } from "@/components/form/field";
 import { forgotPasswordAction, resetPasswordAction } from "../actions";
 import {
@@ -73,7 +74,8 @@ export function ResetPasswordForm() {
       onSubmit={form.handleSubmit((values) =>
         startTransition(async () => {
           const res = await resetPasswordAction(values);
-          if (res && !res.ok) setError(res.error);
+          if (res.ok) window.location.assign(res.data.redirectTo);
+          else setError(res.error);
         }),
       )}
     >
@@ -85,10 +87,10 @@ export function ResetPasswordForm() {
         error={form.formState.errors.password?.message}
         required
       >
-        <Input type="password" autoComplete="new-password" {...form.register("password")} />
+        <PasswordInput autoComplete="new-password" {...form.register("password")} />
       </Field>
       <Field id="confirmPassword" label="Confirm new password" error={form.formState.errors.confirmPassword?.message} required>
-        <Input type="password" autoComplete="new-password" {...form.register("confirmPassword")} />
+        <PasswordInput autoComplete="new-password" {...form.register("confirmPassword")} />
       </Field>
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending && <Loader2 className="animate-spin" aria-hidden />}

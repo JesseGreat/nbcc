@@ -7,10 +7,10 @@
  *
  * No `server-only` imports: this file also runs under tsx from the CLI.
  */
-import type { Currency, MemberStatus, PrismaClient } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+import type { Currency, MemberStatus, Prisma, PrismaClient } from "@prisma/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { nextMembershipNumber, nextReceiptNumber } from "@/lib/counters";
-import { UPLOADS } from "@/lib/config";
+import { MEMBERSHIP_NUMBER_PREFIX, RECEIPT_NUMBER_PREFIX, UPLOADS } from "@/lib/config";
 import { ensureStorageBuckets } from "@/lib/storage";
 import { toMinor } from "@/lib/money";
 import { DEMO_ACCOUNTS } from "./accounts";
@@ -329,10 +329,18 @@ export async function runSeed({ db, supabase, demoPassword, reset, log = console
     return { ...c, createdAt, approvedAt, expiresAt, payments };
   });
 
-  const byApproval = planned.filter((p) => p.approvedAt).sort((a, b) => a.approvedAt!.getTime() - b.approvedAt!.getTime());
+  // Number memberships and receipts in date order (as in real life), in memory, then
+  // write everything with a few bulk inserts so a reset stays fast on a remote database.
+  const yearSeq = new Map<string, number>();
+  const next = (key: string) => {
+    const n = (yearSeq.get(key) ?? 0) + 1;
+    yearSeq.set(key, n);
+    return n;
+  };
   const membershipNumbers = new Map<string, string>();
-  for (const p of byApproval) {
-    membershipNumbers.set(p.name, await db.$transaction((tx) => nextMembershipNumber(tx, p.approvedAt!)));
+  for (const p of planned.filter((x) => x.approvedAt).sort((a, b) => a.approvedAt!.getTime() - b.approvedAt!.getTime())) {
+    const y = p.approvedAt!.getFullYear();
+    membershipNumbers.set(p.name, `${MEMBERSHIP_NUMBER_PREFIX}-${y}-${String(next(`membership:${y}`)).padStart(4, "0")}`);
   }
 
   const sampleCac = samplePdf("CERTIFICATE OF INCORPORATION", "Corporate Affairs Commission - sample");
@@ -345,74 +353,81 @@ export async function runSeed({ db, supabase, demoPassword, reset, log = console
       if (error) log(`  ! sample upload failed: ${error.message}`);
     }
   }
+
+  const memberRows: Prisma.MemberCreateManyInput[] = [];
+  const docRows: Prisma.MemberDocumentCreateManyInput[] = [];
+  const paymentPlan: { memberId: string; tier: { feeMinor: number; currency: Currency; name: string }; paidAt: Date; purpose: "NEW" | "RENEWAL" }[] = [];
   let demoMemberId = "";
 
   for (const p of planned) {
+    const id = randomUUID();
     const tier = tiers.get(p.tier)!;
     const domain = domainFor(p.name);
-    const rc = `RC ${1000000 + Math.floor(rand() * 899999)}`;
-    const member = await db.member.create({
-      data: {
-        companyName: p.name,
-        rcNumber: rc,
-        sectorId: sectors.get(p.sector)!,
-        tierId: tier.id,
-        status: p.status,
-        membershipNumber: membershipNumbers.get(p.name) ?? null,
-        website: `https://www.${domain}`,
-        address: `${10 + Math.floor(rand() * 180)} ${["Adeola Odeku Street", "Broad Street", "Awolowo Road", "Ademola Adetokunbo Crescent", "Aba Road", "Herbert Macaulay Way"][Math.floor(rand() * 6)]}, ${p.city}`,
-        mdName: p.md,
-        mdEmail: `md@${domain}`,
-        mdPhone: `+234 80${Math.floor(rand() * 10)} ${String(Math.floor(rand() * 1000)).padStart(3, "0")} ${String(Math.floor(rand() * 10000)).padStart(4, "0")}`,
-        repName: p.rep,
-        repEmail: p.name === DEMO_MEMBER_COMPANY.name ? DEMO_ACCOUNTS.member.email : `${slugify(p.rep.split(" ")[0])}@${domain}`,
-        repPhone: `+234 81${Math.floor(rand() * 10)} ${String(Math.floor(rand() * 1000)).padStart(3, "0")} ${String(Math.floor(rand() * 10000)).padStart(4, "0")}`,
-        reasonForJoining:
-          "We trade between Nigeria and the UK and want access to the Chamber's network, trade missions and policy briefings.",
-        approvedAt: p.approvedAt,
-        approvedById: p.approvedAt ? adminId : null,
-        rejectionReason: p.status === "REJECTED" ? "CAC certificate could not be verified. Please re-apply with a certified copy." : null,
-        blacklistReason: p.status === "BLACKLISTED" ? "Misrepresentation of Chamber affiliation in marketing materials (demo record)." : null,
-        expiresAt: p.expiresAt,
-        createdAt: p.createdAt,
-      },
+    memberRows.push({
+      id,
+      companyName: p.name,
+      rcNumber: `RC ${1000000 + Math.floor(rand() * 899999)}`,
+      sectorId: sectors.get(p.sector)!,
+      tierId: tier.id,
+      status: p.status,
+      membershipNumber: membershipNumbers.get(p.name) ?? null,
+      website: `https://www.${domain}`,
+      address: `${10 + Math.floor(rand() * 180)} ${["Adeola Odeku Street", "Broad Street", "Awolowo Road", "Ademola Adetokunbo Crescent", "Aba Road", "Herbert Macaulay Way"][Math.floor(rand() * 6)]}, ${p.city}`,
+      mdName: p.md,
+      mdEmail: `md@${domain}`,
+      mdPhone: `+234 80${Math.floor(rand() * 10)} ${String(Math.floor(rand() * 1000)).padStart(3, "0")} ${String(Math.floor(rand() * 10000)).padStart(4, "0")}`,
+      repName: p.rep,
+      repEmail: p.name === DEMO_MEMBER_COMPANY.name ? DEMO_ACCOUNTS.member.email : `${slugify(p.rep.split(" ")[0])}@${domain}`,
+      repPhone: `+234 81${Math.floor(rand() * 10)} ${String(Math.floor(rand() * 1000)).padStart(3, "0")} ${String(Math.floor(rand() * 10000)).padStart(4, "0")}`,
+      reasonForJoining: "We trade between Nigeria and the UK and want access to the Chamber's network, trade missions and policy briefings.",
+      approvedAt: p.approvedAt,
+      approvedById: p.approvedAt ? adminId : null,
+      rejectionReason: p.status === "REJECTED" ? "CAC certificate could not be verified. Please re-apply with a certified copy." : null,
+      blacklistReason: p.status === "BLACKLISTED" ? "Misrepresentation of Chamber affiliation in marketing materials (demo record)." : null,
+      expiresAt: p.expiresAt,
+      createdAt: p.createdAt,
     });
-    if (p.name === DEMO_MEMBER_COMPANY.name) demoMemberId = member.id;
+    if (p.name === DEMO_MEMBER_COMPANY.name) demoMemberId = id;
 
-    // Documents (sample PDFs) — mainly so pending applications can be reviewed live.
+    // Seeded members share two sample PDFs (uploaded once above), mainly so pending applications can be reviewed live.
     const docs = [
       { type: "CAC_CERTIFICATE" as const, fileName: "cac-certificate.pdf", bytes: sampleCac },
       ...(rand() > 0.4 ? [{ type: "COMPANY_PROFILE" as const, fileName: "company-profile.pdf", bytes: sampleProfile }] : []),
     ];
     for (const d of docs) {
-      // Seeded members share two sample files (uploaded once below) to keep resets fast.
-      const storagePath = `samples/${d.fileName}`;
-      await db.memberDocument.create({
-        data: { memberId: member.id, type: d.type, storagePath, fileName: d.fileName, mimeType: "application/pdf", sizeBytes: d.bytes.byteLength, uploadedAt: p.createdAt },
-      });
+      docRows.push({ memberId: id, type: d.type, storagePath: `samples/${d.fileName}`, fileName: d.fileName, mimeType: "application/pdf", sizeBytes: d.bytes.byteLength, uploadedAt: p.createdAt });
     }
+    for (const pay of p.payments) paymentPlan.push({ memberId: id, tier, paidAt: pay.paidAt, purpose: pay.purpose });
+  }
 
-    for (const pay of p.payments) {
-      const periodEnd = addMonths(pay.paidAt, 12);
-      const receiptNumber = await db.$transaction((tx) => nextReceiptNumber(tx, pay.paidAt));
-      await db.payment.create({
-        data: {
-          memberId: member.id,
-          reference: `DEMO-${member.id.slice(-8)}-${pay.paidAt.getTime().toString(36)}`,
-          amountMinor: tier.feeMinor,
-          currency: tier.currency,
-          status: "SUCCESS",
-          channel: ["card", "bank_transfer", "card", "ussd"][Math.floor(rand() * 4)],
-          purpose: pay.purpose,
-          tierName: tier.name,
-          periodStart: pay.paidAt,
-          periodEnd,
-          paidAt: pay.paidAt,
-          receiptNumber,
-          createdAt: pay.paidAt,
-        },
-      });
-    }
+  const paymentRows: Prisma.PaymentCreateManyInput[] = paymentPlan
+    .sort((a, b) => a.paidAt.getTime() - b.paidAt.getTime())
+    .map((pay) => {
+      const y = pay.paidAt.getFullYear();
+      return {
+        memberId: pay.memberId,
+        reference: `DEMO-${pay.memberId.slice(-8)}-${pay.paidAt.getTime().toString(36)}`,
+        amountMinor: pay.tier.feeMinor,
+        currency: pay.tier.currency,
+        status: "SUCCESS",
+        channel: ["card", "bank_transfer", "card", "ussd"][Math.floor(rand() * 4)],
+        purpose: pay.purpose,
+        tierName: pay.tier.name,
+        periodStart: pay.paidAt,
+        periodEnd: addMonths(pay.paidAt, 12),
+        paidAt: pay.paidAt,
+        receiptNumber: `${RECEIPT_NUMBER_PREFIX}-${y}-${String(next(`receipt:${y}`)).padStart(6, "0")}`,
+        createdAt: pay.paidAt,
+      };
+    });
+
+  await db.member.createMany({ data: memberRows });
+  await db.memberDocument.createMany({ data: docRows });
+  await db.payment.createMany({ data: paymentRows });
+  // Continue live numbering after the seeded numbers.
+  for (const [key, value] of yearSeq) {
+    await db.$executeRaw`INSERT INTO "Counter" ("key", "value") VALUES (${key}, ${value})
+      ON CONFLICT ("key") DO UPDATE SET "value" = GREATEST("Counter"."value", EXCLUDED."value")`;
   }
 
   // A couple of failed attempts so the payments list shows realistic states.

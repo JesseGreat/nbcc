@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Field, FormError } from "@/components/form/field";
 import { loginAction, resendVerificationAction } from "../actions";
 import { loginSchema, type LoginInput } from "../schemas";
@@ -39,11 +40,13 @@ export function LoginForm({
     setErrorCode(null);
     startTransition(async () => {
       const res = await loginAction(values);
-      // On success the action redirects, so we only get here on failure.
-      if (res && !res.ok) {
-        setError(res.error);
-        setErrorCode(res.code ?? null);
+      if (res.ok) {
+        // Full navigation so middleware routes it (admin subdomain rewrite).
+        window.location.assign(res.data.redirectTo);
+        return;
       }
+      setError(res.error);
+      setErrorCode(res.code ?? null);
     });
   });
 
@@ -102,7 +105,7 @@ export function LoginForm({
           <Input type="email" autoComplete="email" inputMode="email" {...form.register("email")} />
         </Field>
         <Field id="password" label="Password" error={form.formState.errors.password?.message} required>
-          <Input type="password" autoComplete="current-password" {...form.register("password")} />
+          <PasswordInput autoComplete="current-password" {...form.register("password")} />
         </Field>
 
         <div className="flex justify-end">

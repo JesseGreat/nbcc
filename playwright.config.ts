@@ -17,8 +17,9 @@ const ADMIN_URL = `http://admin.localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
-  timeout: 180_000,
-  expect: { timeout: 20_000 },
+  timeout: 600_000,
+  // Generous: under `next dev` each page compiles on first visit.
+  expect: { timeout: 90_000 },
   fullyParallel: false,
   retries: 0,
   reporter: [["list"]],

@@ -27,7 +27,13 @@ export async function signOutAction() {
   redirect("/login");
 }
 
-export async function loginAction(input: LoginInput): Promise<ActionResult> {
+/**
+ * Returns where to go instead of calling redirect(): a server-action redirect is
+ * rendered inside the same request and skips middleware, so on the admin
+ * subdomain "/" would not be rewritten to the admin dashboard. The client does
+ * a full navigation instead.
+ */
+export async function loginAction(input: LoginInput): Promise<ActionResult<{ redirectTo: string }>> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) return fromZodError(parsed.error);
   const { email, password, next } = parsed.data;
@@ -66,7 +72,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
   }
   await db.user.update({ where: { id: appUser.id }, data: { lastLoginAt: new Date() } });
 
-  redirect(safeNextPath(next, admin ? "/" : "/member"));
+  return { ok: true, data: { redirectTo: safeNextPath(next, admin ? "/" : "/member") } };
 }
 
 /** Always reports success so the form cannot be used to discover registered emails. */
@@ -87,7 +93,7 @@ export async function forgotPasswordAction(input: ForgotPasswordInput): Promise<
   return { ok: true };
 }
 
-export async function resetPasswordAction(input: ResetPasswordInput): Promise<ActionResult> {
+export async function resetPasswordAction(input: ResetPasswordInput): Promise<ActionResult<{ redirectTo: string }>> {
   const parsed = resetPasswordSchema.safeParse(input);
   if (!parsed.success) return fromZodError(parsed.error);
 
@@ -101,7 +107,7 @@ export async function resetPasswordAction(input: ResetPasswordInput): Promise<Ac
   if (error) return fail(error.message);
 
   const appUser = await db.user.findUnique({ where: { id: user.id } });
-  redirect(isAdminRole(appUser?.role) ? "/" : "/member");
+  return { ok: true, data: { redirectTo: isAdminRole(appUser?.role) ? "/" : "/member" } };
 }
 
 /** Re-send the email verification link. Generic response either way. */

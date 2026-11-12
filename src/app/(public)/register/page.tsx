@@ -14,7 +14,7 @@ export default async function RegisterPage() {
     <div className="mx-auto w-full max-w-2xl px-4 py-8 md:py-12">
       <h1 className="text-2xl font-bold text-primary md:text-3xl">Apply for membership</h1>
       <p className="mt-1 mb-6 text-muted-foreground">
-        It takes about 10 minutes. Have your CAC certificate ready (PDF, JPG or PNG).{" "}
+        It takes about 3 minutes. Have your CAC certificate ready (PDF, JPG or PNG).{" "}
         <span className="whitespace-nowrap">
           Already applied?{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">

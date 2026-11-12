@@ -72,7 +72,7 @@ export default async function MemberDashboardPage() {
       {m.expiresAt && left !== null && left >= 0 && <RenewalProgress daysLeftValue={left} />}
 
       <section className="rounded-2xl border bg-card p-5 md:p-6" aria-labelledby="news-heading">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3">
           <h2 id="news-heading" className="flex items-center gap-2 text-lg font-semibold text-primary">
             <Bell className="size-5" aria-hidden /> Latest announcements
           </h2>
@@ -104,7 +104,7 @@ function Stat({ icon: Icon, label, value, sub }: { icon: typeof Hash; label: str
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Icon className="size-3.5" aria-hidden /> {label}
       </p>
-      <div className="mt-1.5 truncate text-base font-semibold md:text-lg">{value}</div>
+      <div className="mt-1.5 text-base font-semibold break-words md:text-lg">{value}</div>
       {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
