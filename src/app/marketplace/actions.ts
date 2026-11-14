@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createOrder, createUser, getOrder, getUser, login, logout, setOrderStatus } from "./_lib/store";
+import { createOrder, createUser, getUser, login, logout } from "./_lib/store";
 import { getProduct } from "./_lib/products";
 
 const credentials = z.object({
@@ -46,20 +46,4 @@ export async function buyAction(form: FormData) {
   if (!product) redirect("/marketplace");
   const orderId = await createOrder(user.id, product.id, product.price, product.currency);
   redirect(`/marketplace/orders/${orderId}`);
-}
-
-const statusSchema = z.object({
-  orderId: z.string().uuid(),
-  status: z.enum(["PENDING", "IN_ESCROW", "RELEASED", "REFUNDED", "DISPUTED", "CANCELLED"]),
-  escrowRef: z.string().max(200).optional(),
-});
-
-/** Called from the checkout page after the escrow SDK reports back. */
-export async function updateOrderStatusAction(input: z.infer<typeof statusSchema>) {
-  const data = statusSchema.parse(input);
-  const user = await getUser();
-  if (!user) throw new Error("Not signed in");
-  const order = await getOrder(user.id, data.orderId);
-  if (!order) throw new Error("Order not found");
-  await setOrderStatus(order.id, data.status, data.escrowRef);
 }

@@ -1,23 +1,44 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/money";
 import { getProduct } from "../../_lib/products";
 import { getOrder, getUser } from "../../_lib/store";
-import { EscrowCheckout } from "../../_components/escrow-checkout";
+import { checkoutUrl, safebartterConfigError } from "../../_lib/safebartter";
 
-export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
+const STATUS_TEXT: Record<string, string> = {
+  PENDING: "Awaiting payment",
+  PAID: "Paid into escrow (not yet verified on the server)",
+  VERIFIED: "Paid into escrow (verified with SafeBartter)",
+};
+
+export default async function OrderPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ notice?: string }>;
+}) {
   const { id } = await params;
+  const { notice } = await searchParams;
   const user = await getUser();
   if (!user) redirect(`/marketplace/login?next=/marketplace/orders/${id}`);
   const order = await getOrder(user.id, id);
   if (!order) notFound();
   const product = getProduct(order.product_id);
+  const configError = safebartterConfigError();
+  const payUrl = product && !configError && order.status === "PENDING" ? await checkoutUrl(order, product) : null;
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
       <Link href="/marketplace/orders" className="text-sm text-muted-foreground underline">
         ← My orders
       </Link>
+      {notice && (
+        <p role="status" className="rounded-md border bg-background p-3 text-sm">
+          {notice === "cancelled" ? "Checkout was cancelled. You can try again." : `Checkout failed (${notice.replace("error:", "")}). You can try again.`}
+        </p>
+      )}
       <div className="rounded-lg border bg-background p-6">
         <h1 className="text-xl font-semibold">Checkout</h1>
         <dl className="mt-4 space-y-2 text-sm">
@@ -25,21 +46,18 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <Row label="Seller" value={product?.seller ?? "—"} />
           <Row label="Amount" value={formatMoney(Number(order.amount), "NGN")} />
           <Row label="Order ID" value={order.id} mono />
-          <Row label="Status" value={order.status} />
-          {order.escrow_ref && <Row label="Escrow ref" value={order.escrow_ref} mono />}
+          <Row label="Status" value={STATUS_TEXT[order.status] ?? order.status} />
+          {order.escrow_ref && <Row label="SafeBartter ref" value={order.escrow_ref} mono />}
         </dl>
         <div className="mt-6">
-          <EscrowCheckout
-            order={{
-              id: order.id,
-              amount: Number(order.amount),
-              currency: order.currency,
-              status: order.status,
-              productName: product?.name ?? order.product_id,
-              seller: product?.seller ?? "",
-            }}
-            buyer={{ id: user.id, username: user.username }}
-          />
+          {payUrl && (
+            <Button asChild size="lg" className="w-full">
+              <a href={payUrl}>Pay with SafeBartter escrow</a>
+            </Button>
+          )}
+          {configError && order.status === "PENDING" && (
+            <p className="text-sm text-destructive">Escrow not configured: {configError}</p>
+          )}
         </div>
       </div>
     </div>
