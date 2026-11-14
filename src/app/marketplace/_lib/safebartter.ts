@@ -10,10 +10,11 @@ import type { Product } from "./products";
  *  SAFEBARTTER_KEY           public key (sb_test_... while testing)            required
  *  SAFEBARTTER_SELLER_EMAIL  who gets paid; must differ from the buyer's email required
  *  SAFEBARTTER_CHECKOUT_URL  launcher, default the test launcher below
- *  SAFEBARTTER_API_URL       API base for GET /sdk/checkout/verify/{reference}  optional
- *  SAFEBARTTER_SECRET_KEY    secret key for verify                              optional
+ *  SAFEBARTTER_SECRET_KEY    secret key; enables server-side verify             optional
+ *  SAFEBARTTER_API_URL       verify API base, default https://api.safebartter.com/v1
  */
 const DEFAULT_CHECKOUT_URL = "https://pay-with-safebartter.vercel.app";
+const DEFAULT_API_URL = "https://api.safebartter.com/v1";
 
 export function safebartterConfigError(): string | null {
   if (!process.env.SAFEBARTTER_KEY) return "SAFEBARTTER_KEY is not set";
@@ -54,9 +55,9 @@ export async function checkoutUrl(order: { id: string }, product: Product): Prom
 
 /** Server-side confirmation. Returns null when verify isn't configured yet. */
 export async function verifyReference(reference: string): Promise<{ ok: boolean; body: unknown } | null> {
-  const api = process.env.SAFEBARTTER_API_URL;
+  const api = process.env.SAFEBARTTER_API_URL || DEFAULT_API_URL;
   const secret = process.env.SAFEBARTTER_SECRET_KEY;
-  if (!api || !secret) return null;
+  if (!secret) return null;
   try {
     const res = await fetch(`${api.replace(/\/$/, "")}/sdk/checkout/verify/${encodeURIComponent(reference)}`, {
       headers: { Authorization: `Bearer ${secret}`, Accept: "application/json" },
