@@ -22,23 +22,19 @@ export default async function LandingPage() {
 
   return (
     <>
-      <section className="nbcc-hero">
-        <span aria-hidden className="nbcc-orb -top-24 right-0 size-96 bg-brand-gold/30" />
-        <span aria-hidden className="nbcc-orb -bottom-32 left-10 size-96 bg-sky-400/20 [animation-delay:-6s]" />
+      <section className="bg-primary text-primary-foreground">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-[1fr_auto] md:py-24">
           <div>
-          <p className="nbcc-rise mb-3 inline-flex items-center gap-2 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand-gold uppercase backdrop-blur" style={{ "--d": 0 } as React.CSSProperties}>
-            <span className="size-1.5 animate-pulse rounded-full bg-brand-gold" aria-hidden /> {ORG.name}
-          </p>
-          <h1 className="nbcc-rise max-w-3xl text-3xl leading-tight font-bold tracking-tight md:text-5xl" style={{ "--d": 1 } as React.CSSProperties}>
-            Your Chamber membership, <span className="nbcc-gold-word">managed in one place.</span>
+          <p className="mb-3 text-sm font-semibold tracking-wider text-brand-gold uppercase">{ORG.name}</p>
+          <h1 className="max-w-3xl text-3xl leading-tight font-bold tracking-tight md:text-5xl">
+            Your Chamber membership, managed in one place.
           </h1>
-          <p className="nbcc-rise mt-4 max-w-2xl text-base text-white/80 md:text-lg" style={{ "--d": 2 } as React.CSSProperties}>
+          <p className="mt-4 max-w-2xl text-base text-primary-foreground/80 md:text-lg">
             Apply for membership, pay and renew your dues, download receipts and connect with fellow members of the
             Nigerian-British business community.
           </p>
-          <div className="nbcc-rise mt-8 flex flex-col gap-3 sm:flex-row" style={{ "--d": 3 } as React.CSSProperties}>
-            <Button asChild size="lg" className="nbcc-pulse bg-brand-gold text-brand-navy hover:bg-brand-gold/90">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button asChild size="lg" className="bg-brand-gold text-brand-navy hover:bg-brand-gold/90">
               <Link href="/register">
                 Apply for membership <ArrowRight aria-hidden />
               </Link>
@@ -53,11 +49,8 @@ export default async function LandingPage() {
             </Button>
           </div>
           </div>
-          <div className="nbcc-rise relative hidden md:block" style={{ "--d": 2 } as React.CSSProperties}>
-            <span aria-hidden className="nbcc-halo" />
-            <div className="nbcc-float rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-brand-gold/40">
-              <BrandCrest priority className="w-56 lg:w-64" />
-            </div>
+          <div className="hidden rounded-2xl bg-white p-6 shadow-lg md:block">
+            <BrandCrest priority className="w-56 lg:w-64" />
           </div>
         </div>
       </section>
