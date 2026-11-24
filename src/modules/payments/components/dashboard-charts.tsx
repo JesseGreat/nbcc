@@ -47,21 +47,21 @@ export function RevenueChart({ data }: { data: { label: string; revenueMinor: nu
 
 export function TierChart({ data }: { data: { tier: string; members: number }[] }) {
   return (
-    <div className="h-64 w-full md:h-72" role="img" aria-label="Bar chart of active members by tier. A table view follows.">
+    <div className="h-64 w-full md:h-72" role="img" aria-label="Bar chart of members by tier. A table view follows.">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ top: 4, right: 28, left: 0, bottom: 0 }} barCategoryGap="30%">
           <CartesianGrid horizontal={false} stroke={GRID} />
           <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: INK_MUTED, fontSize: 11 }} />
-          <YAxis type="category" dataKey="tier" tickLine={false} axisLine={false} width={84} tick={{ fill: INK_MUTED, fontSize: 12 }} />
+          <YAxis type="category" dataKey="tier" tickLine={false} axisLine={false} width={108} tick={{ fill: INK_MUTED, fontSize: 12 }} />
           <Tooltip
             cursor={{ fill: "var(--muted)" }}
             content={({ active, payload, label }: TooltipContentProps<ValueType, NameType>) =>
-              active && payload?.length ? <TooltipBox title={String(label)} value={`${payload[0].value} active members`} /> : null
+              active && payload?.length ? <TooltipBox title={String(label)} value={`${payload[0].value} members`} /> : null
             }
           />
           <Bar
             dataKey="members"
-            name="Active members"
+            name="Members"
             fill={BAR}
             radius={[0, 4, 4, 0]}
             maxBarSize={28}

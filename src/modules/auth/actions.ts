@@ -36,7 +36,18 @@ export async function signOutAction() {
 export async function loginAction(input: LoginInput): Promise<ActionResult<{ redirectTo: string }>> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) return fromZodError(parsed.error);
-  const { email, password, next } = parsed.data;
+  const { email: identifier, password, next } = parsed.data;
+
+  // Members may sign in with their membership number instead of their email.
+  let email = identifier.toLowerCase();
+  if (!identifier.includes("@")) {
+    const byNumber = await db.member.findFirst({
+      where: { membershipNumber: { equals: identifier, mode: "insensitive" } },
+      select: { user: { select: { email: true } } },
+    });
+    if (!byNumber?.user) return fail("Incorrect membership number or password.");
+    email = byNumber.user.email;
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -44,7 +55,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResult<{ red
     if (error?.code === "email_not_confirmed") {
       return fail("Please confirm your email address first. Check your inbox for the link.", "email_not_confirmed");
     }
-    return fail("Incorrect email or password.");
+    return fail("Incorrect login details or password.");
   }
 
   const appUser = await db.user.findUnique({ where: { id: data.user.id } });

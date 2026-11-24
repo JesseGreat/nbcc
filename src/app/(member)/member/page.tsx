@@ -24,17 +24,28 @@ export default async function MemberDashboardPage() {
 
   return (
     <div className="grid gap-5">
-      <div>
-        <p className="text-sm text-muted-foreground">Welcome back, {user.name.split(" ")[0]}</p>
-        <h1 className="text-2xl font-bold tracking-tight text-primary md:text-3xl">{m.companyName}</h1>
-      </div>
+      <section className="nbcc-hero nbcc-rise rounded-2xl p-6 shadow-lg md:p-8" style={{ "--d": 0 } as React.CSSProperties}>
+        <span aria-hidden className="nbcc-orb -top-16 -right-10 size-56 bg-brand-gold/40" />
+        <span aria-hidden className="nbcc-orb -bottom-24 left-1/3 size-64 bg-sky-400/25 [animation-delay:-6s]" />
+        <p className="text-sm font-medium text-white/70">Welcome back, {user.name.split(" ")[0]}</p>
+        <h1 className="nbcc-gold-text mt-1 text-2xl font-bold tracking-tight md:text-4xl">{m.companyName}</h1>
+        <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
+          <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur">{m.tier.name} member</span>
+          {m.membershipNumber && (
+            <span className="rounded-full border border-brand-gold/40 bg-brand-gold/15 px-3 py-1 text-[#f3d77a] tabular-nums backdrop-blur">
+              No. {m.membershipNumber}
+            </span>
+          )}
+        </div>
+      </section>
 
       {pay.canPay && (
         <section
           className={cn(
-            "flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center md:p-6",
+            "nbcc-rise flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center md:p-6",
             pay.urgent ? "bg-primary text-primary-foreground" : "border bg-card",
           )}
+          style={{ "--d": 1 } as React.CSSProperties}
           aria-labelledby="pay-heading"
         >
           <div className="flex-1">
@@ -49,7 +60,7 @@ export default async function MemberDashboardPage() {
               {m.tier.name} annual fee: {formatMoney(m.tier.feeMinor, m.tier.currency)}
             </p>
           </div>
-          <Button asChild size="lg" className={pay.urgent ? "bg-brand-gold text-brand-navy hover:bg-brand-gold/90" : undefined}>
+          <Button asChild size="lg" className={pay.urgent ? "nbcc-pulse bg-brand-gold text-brand-navy hover:bg-brand-gold/90" : undefined}>
             <Link href="/member/payments">
               <CreditCard aria-hidden /> {pay.label}
             </Link>
@@ -58,10 +69,11 @@ export default async function MemberDashboardPage() {
       )}
 
       <section aria-label="Membership summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat icon={Layers} label="Status" value={<MemberStatusBadge status={m.status} />} />
-        <Stat icon={Hash} label="Membership no." value={<span className="tabular-nums">{m.membershipNumber ?? "—"}</span>} />
-        <Stat icon={CreditCard} label="Tier" value={m.tier.name} />
+        <Stat d={2} icon={Layers} label="Status" value={<MemberStatusBadge status={m.status} />} />
+        <Stat d={3} icon={Hash} label="Membership no." value={<span className="tabular-nums">{m.membershipNumber ?? "—"}</span>} />
+        <Stat d={4} icon={CreditCard} label="Tier" value={m.tier.name} />
         <Stat
+          d={5}
           icon={CalendarClock}
           label="Expires"
           value={m.expiresAt ? formatDate(m.expiresAt) : "Not yet paid"}
@@ -71,7 +83,7 @@ export default async function MemberDashboardPage() {
 
       {m.expiresAt && left !== null && left >= 0 && <RenewalProgress daysLeftValue={left} />}
 
-      <section className="rounded-2xl border bg-card p-5 md:p-6" aria-labelledby="news-heading">
+      <section className="nbcc-rise rounded-2xl border bg-card p-5 md:p-6" style={{ "--d": 7 } as React.CSSProperties} aria-labelledby="news-heading">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3">
           <h2 id="news-heading" className="flex items-center gap-2 text-lg font-semibold text-primary">
             <Bell className="size-5" aria-hidden /> Latest announcements
@@ -85,7 +97,7 @@ export default async function MemberDashboardPage() {
         ) : (
           <ul className="divide-y">
             {announcements.map((a) => (
-              <li key={a.id} className="py-3">
+              <li key={a.id} className="nbcc-row -mx-2 rounded-lg px-2 py-3 hover:bg-muted/60">
                 <p className="font-medium">{a.title}</p>
                 <p className="line-clamp-2 text-sm text-muted-foreground">{a.body}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{formatDate(a.sentAt)}</p>
@@ -98,11 +110,26 @@ export default async function MemberDashboardPage() {
   );
 }
 
-function Stat({ icon: Icon, label, value, sub }: { icon: typeof Hash; label: string; value: React.ReactNode; sub?: string }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  d = 0,
+}: {
+  icon: typeof Hash;
+  label: string;
+  value: React.ReactNode;
+  sub?: string;
+  d?: number;
+}) {
   return (
-    <div className="min-w-0 rounded-xl border bg-card p-4">
-      <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-        <Icon className="size-3.5" aria-hidden /> {label}
+    <div className="nbcc-rise nbcc-card min-w-0 rounded-xl border bg-card p-4" style={{ "--d": d } as React.CSSProperties}>
+      <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <span className="grid size-7 place-items-center rounded-lg bg-accent text-accent-foreground">
+          <Icon className="size-3.5" aria-hidden />
+        </span>
+        {label}
       </p>
       <div className="mt-1.5 text-base font-semibold break-words md:text-lg">{value}</div>
       {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
@@ -114,7 +141,7 @@ function Stat({ icon: Icon, label, value, sub }: { icon: typeof Hash; label: str
 function RenewalProgress({ daysLeftValue }: { daysLeftValue: number }) {
   const pct = Math.max(0, Math.min(100, Math.round((daysLeftValue / 365) * 100)));
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <div className="nbcc-rise rounded-xl border bg-card p-4" style={{ "--d": 6 } as React.CSSProperties}>
       <div className="mb-2 flex justify-between text-sm">
         <span className="font-medium">Membership year</span>
         <span className="text-muted-foreground">{daysLeftValue} days remaining</span>
@@ -127,7 +154,7 @@ function RenewalProgress({ daysLeftValue }: { daysLeftValue: number }) {
         aria-valuemax={365}
         aria-valuenow={daysLeftValue}
       >
-        <div className={cn("h-full rounded-full", daysLeftValue <= 30 ? "bg-destructive" : daysLeftValue <= 90 ? "bg-brand-gold" : "bg-success")} style={{ width: `${pct}%` }} />
+        <div className={cn("nbcc-bar h-full rounded-full", daysLeftValue <= 30 ? "bg-destructive" : daysLeftValue <= 90 ? "bg-brand-gold" : "bg-success")} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

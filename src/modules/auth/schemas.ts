@@ -10,7 +10,8 @@ export const passwordSchema = z
   .regex(/[0-9]/, "Include at least one number");
 
 export const loginSchema = z.object({
-  email: emailSchema,
+  /** Email address or membership number. */
+  email: z.string().trim().min(1, "Enter your membership number or email").max(254),
   password: z.string().min(1, "Enter your password").max(200),
   next: z.string().optional(),
 });
