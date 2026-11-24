@@ -101,7 +101,7 @@ export function LoginForm({
           </p>
         )}
 
-        <Field id="email" label="Membership no. / email" error={form.formState.errors.email?.message} required>
+        <Field id="email" label="Membership no / email" error={form.formState.errors.email?.message} required>
           <Input type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="e.g. NBCC-2026-0001 / you@company.com" {...form.register("email")} />
         </Field>
         <Field id="password" label="Password" error={form.formState.errors.password?.message} required>
