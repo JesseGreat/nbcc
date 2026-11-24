@@ -53,7 +53,7 @@ export function SidebarShell({
         data-collapsed={collapsed}
         aria-label={variant === "member" ? "Member navigation" : "Admin navigation"}
         className={cn(
-          "group/sidebar sticky top-(--banner-h) z-40 hidden h-[calc(100dvh-var(--banner-h))] flex-col bg-sidebar text-sidebar-foreground",
+          "nbcc-sidebar group/sidebar sticky top-(--banner-h) z-40 hidden h-[calc(100dvh-var(--banner-h))] flex-col bg-sidebar text-sidebar-foreground",
           variant === "member" ? "md:flex" : "lg:flex",
           collapsed ? "px-2 py-4" : "p-4",
         )}
